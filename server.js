@@ -6,30 +6,29 @@ const dns2 = require("dns2");
 const { Packet } = require("dns2");
 const b32 = require("hi-base32");
 const fs = require("fs");
-const pending = {};
 const known = {};
 const NodeCache = require("node-cache");
 const cache = new NodeCache();
-
+const reverseDomain = process.env.reverseDomain;
+const namespace = process.env.hypernamespace;
 const handle = async (request, send) => {
     const response = Packet.createResponseFromRequest(request);
     const [question] = request.questions;
     let { name } = question;
-    console.log({ name })
     name = name.toLowerCase();
     let split = name.split(".");
     if (!split[split.length - 3]) {
         return send(response);
     }
 
-    const outname = 'hyperbolic' + split[split.length - 3];
+    const outname = namespace + split[split.length - 3];
     if (name.endsWith('.in-addr.arpa')) {
         const response = Packet.createResponseFromRequest(request);
         response.answers = [
             {
                 type: Packet.TYPE.PTR,
                 name: question.name.toLowerCase(),
-                domain: 'lan.247420.xyz',
+                domain: reverseDomain,
                 class: Packet.CLASS.IN,
                 ttl: 3600,
             }
@@ -37,7 +36,7 @@ const handle = async (request, send) => {
         send(response);
         return;
     }
-    const cached = cache.get('hyperbolic' + split.join('.'));
+    const cached = cache.get(namespace + split.join('.'));
     if (cached) {
         response.answers = cached.data.answers;
         return send(response);
@@ -46,13 +45,10 @@ const handle = async (request, send) => {
         return send(response);
     }
 
-
     if (!split) {
-        console.log("no name sending early", question);
         return send(response);
     }
 
-    let target;
     let decoded = '';
     let result;
     try { decoded = b32.decode.asBytes(name.toUpperCase()) } catch (e) { }
@@ -88,7 +84,6 @@ const handle = async (request, send) => {
                 let socket = node.connect(target);
                 socket.write('dns');
                 socket.once("error", function (data) {
-                    send(response);
                     res();
                 });
 
@@ -97,7 +92,6 @@ const handle = async (request, send) => {
                     if (!response.authorities.length) {
                         response.header.aa = 1;
                     }
-                    send(response);
                     res(JSON.parse(data)?.host);
                 });
 
@@ -105,51 +99,40 @@ const handle = async (request, send) => {
         }
 
         if (result.length > 0) {
-            const loopConnections = async () => {
-                let ip;
-                for (res of result) {
-                    for (peer of res.peers) {
-                        //console.log("KNOWN", name, known[name])
-                        if (known[name]?.key == peer.publicKey) {
-                        } else if(known[name]?.key && known[name]?.ip) {
-                            console.log(known[name]);
-                        }
-                        console.log('connecting to ', peer);
-                        if(!known[name]) known[name]={};
-                        known[name].ip = ip = await connectAndGetIp(peer.publicKey);
+            let ip;
+            for (res of result) {
+                for (peer of res.peers) {
+                    //console.log("KNOWN", name, known[name])
+                    console.log('connecting to ', peer);
+                    if (!known[name]) known[name] = {};
+                    known[name].ip = ip = await connectAndGetIp(peer.publicKey);
 
-                        if (ip) {
-                            console.log('IP FOUND', {ip});
-                            known[name] = {};
-                            known[name].last = new Date().getTime();
-                            known[name].key = peer.publicKey;
-                            known[name].keyback = known[name]?.key?.toString('hex');
-                            fs.writeFileSync('known/' + name, JSON.stringify(known[name]));
-                            response.answers.push({
-                                type: Packet.TYPE.A,
-                                name: question.name.toLowerCase(),
-                                address: ip,
-                                class: Packet.CLASS.IN,
-                                ttl: 3600,
-                            });
-                            cache.set('hyperbolic' + split.join('.'), { data: response, time: new Date().getTime() }, 300000);
-                            continue;
-                        }
+                    if (ip) {
+                        console.log('IP FOUND', { ip });
+                        known[name] = {};
+                        known[name].last = new Date().getTime();
+                        known[name].key = peer.publicKey;
+                        known[name].keyback = known[name]?.key?.toString('hex');
+                        fs.writeFileSync('known/' + name, JSON.stringify(known[name]));
+                        response.answers.push({
+                            type: Packet.TYPE.A,
+                            name: question.name.toLowerCase(),
+                            address: ip,
+                            class: Packet.CLASS.IN,
+                            ttl: 3600,
+                        });
+                        cache.set('hyperbolic' + split.join('.'), { data: response, time: new Date().getTime() }, 300000);
+                        return send(response);
                     }
-                    if (ip) continue;
                 }
             }
-            loopConnections();
             if (known[name]) target = known[name].key;
         } else {
             console.log('no results');
         }
     }
 
-    if (!target) {
-        console.log(response.answers);
-        send(response);
-    }
+    return send(response);
 };
 
 const server = dns2.createServer({
