@@ -14,6 +14,53 @@ const namespace = process.env.hypernamespace;
 const handle = async (request, send) => {
     const response = Packet.createResponseFromRequest(request);
     const [question] = request.questions;
+    console.log('question', {question});
+    if(question.name.toLowerCase().startsWith('mail')) {
+        const ip = '150.136.80.119';
+        response.answers = [
+            {
+                type: Packet.TYPE.A,
+                name: question.name.toLowerCase(),
+                address: ip,
+                class: Packet.CLASS.IN,
+                ttl: 3600,
+            },
+          ];        
+          send(response);
+          console.log(response)
+          return; 
+    }
+    if(question.type == 15) {
+        console.log("MX RECORD")
+        response.answers = [
+            {
+              type: Packet.TYPE.MX,
+              name: question.name.toLowerCase(),
+              exchange:'mail.247420.xyz',
+              priority:'10',
+              class: Packet.CLASS.IN,
+              ttl: 1,
+            },
+          ];
+        send(response);
+        console.log(response)
+        return;        
+    }
+    if (question.type == 16) {
+        console.log({ question });
+        response.answers = [
+            {
+              type: Packet.TYPE.TXT,
+              name: question.name.toLowerCase(),
+              data:'google-site-verification=PguQv_YbBtFq8QCtyzH-z95Tqh9B_gIJevdriRe9GQ8',
+              class: Packet.CLASS.IN,
+              ttl: 1,
+            },
+          ];
+        send(response);
+        return;
+      }
+      
     let { name } = question;
     name = name.toLowerCase();
     let split = name.split(".");
