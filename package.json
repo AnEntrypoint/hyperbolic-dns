@@ -20,6 +20,7 @@
     "http-proxy": "^1.18.1",
     "http-proxy-middleware": "^2.0.4",
     "hypercore-crypto": "^3.2.1",
+    "hyperdht": "^6.6.1",
     "net": "^1.0.2",
     "node-cache": "^5.1.2"
   }

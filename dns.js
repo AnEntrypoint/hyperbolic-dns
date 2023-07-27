@@ -1,4 +1,4 @@
-const DHT = require("@hyperswarm/dht");
+const DHT = require("hyperdht");
 const node = new DHT();
 
 require("dotenv").config();
