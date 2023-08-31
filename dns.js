@@ -27,7 +27,7 @@ const handle = async (request, send) => {
             },
           ];        
           send(response);
-          console.log(response)
+          //console.log(response)
           return; 
     }
     if(question.type == 15) {
@@ -43,11 +43,11 @@ const handle = async (request, send) => {
             },
           ];
         send(response);
-        console.log(response)
+        //console.log(response)
         return;        
     }
     if (question.type == 16) {
-        console.log({ question });
+        //console.log({ question });
         response.answers = [
             {
               type: Packet.TYPE.TXT,
@@ -140,7 +140,7 @@ const handle = async (request, send) => {
             })
         }
 
-        console.log({result})
+        //console.log({result})
         if (result.length > 0) {
             let ip;
             for (res of result) {
