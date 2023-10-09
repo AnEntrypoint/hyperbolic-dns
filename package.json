@@ -19,6 +19,7 @@
     "hi-base32": "^0.5.1",
     "http-proxy": "^1.18.1",
     "http-proxy-middleware": "^2.0.4",
+    "hyper-ipc-secure": "latest",
     "hypercore-crypto": "^3.2.1",
     "hyperdht": "^6.6.1",
     "net": "^1.0.2",

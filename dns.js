@@ -9,6 +9,7 @@ const fs = require("fs");
 const known = {};
 const NodeCache = require("node-cache");
 const cache = new NodeCache();
+const { lookup } = require('hyper-ipc-secure')()
 const reverseDomain = process.env.reverseDomain;
 const namespace = process.env.hypernamespace;
 const handle = async (request, send) => {
@@ -67,7 +68,7 @@ const handle = async (request, send) => {
     if (!split[split.length - 3]) {
         split = ['', split[0], split[1]];
     }
-
+    
     const outname = namespace + split[split.length - 3];
     console.log({outname});
     if (name.endsWith('.in-addr.arpa')) {
@@ -110,13 +111,14 @@ const handle = async (request, send) => {
             }
         }
         if (known[name] && new Date().getTime() - known[name].last < 15 * 60 * 1000) {
-            const hash = DHT.hash(Buffer.from(outname));
-            result = await toArray(node.lookup(hash));
+            console.log('LOOKING UP', namespace)
+            result = await lookup(namespace);
         } else {
-            const hash = DHT.hash(Buffer.from(outname));
-            result = await toArray(node.lookup(hash));
+            console.log('LOOKING UP', namespace)
+            result = await lookup(namespace);
         }
         async function toArray(iterable) {
+            console.log(iterable);
             const result = []
             for await (const data of iterable) result.push(data)
             return result
@@ -140,7 +142,7 @@ const handle = async (request, send) => {
             })
         }
 
-        //console.log({result})
+        console.log({result})
         if (result.length > 0) {
             let ip;
             for (res of result) {
