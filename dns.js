@@ -1,7 +1,7 @@
 const DHT = require("hyperdht");
 const node = new DHT();
 require("dotenv").config();
-console.log('test')
+
 const dns2 = require("dns2");
 const { Packet } = require("dns2");
 const b32 = require("hi-base32");
