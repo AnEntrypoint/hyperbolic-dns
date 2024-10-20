@@ -1,3 +1,3 @@
 [phases.setup]
-providers = ["node", "python"]
+providers = ["node", "python311"]
 aptPkgs = ['build-essential']
