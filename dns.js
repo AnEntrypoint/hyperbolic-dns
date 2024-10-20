@@ -1,6 +1,5 @@
 const DHT = require("hyperdht");
 const node = new DHT();
-
 require("dotenv").config();
 const dns2 = require("dns2");
 const { Packet } = require("dns2");
