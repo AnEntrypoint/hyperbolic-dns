@@ -1,3 +1,4 @@
 [phases.setup]
 providers = ["node", "python3"]
+nixPkgs = ['...','python311']
 aptPkgs = ['build-essential']
