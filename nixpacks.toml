@@ -1,0 +1,2 @@
+[phases.setup]
+providers = ["node", "python"]
