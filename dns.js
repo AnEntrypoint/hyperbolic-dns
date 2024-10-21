@@ -59,9 +59,18 @@ const dnsServer = dns2.createServer({
         console.log('Question:', { question });
 
         const subdomain = question.name.toLowerCase();
-
+        console.log({subdomain})
+        if(subdomain.endsWith('dns')) {
+            response.answers.push({
+                type: Packet.TYPE.A,
+                name: subdomain,
+                address: process.env.HOSTIP,
+                class: Packet.CLASS.IN,
+                ttl: 3600,
+            });
+        }
         // Check for registered exact match
-        if (registeredSubdomains[subdomain]) {
+        if (subdomain.endsWith(registeredSubdomains[subdomain])) {
             const host = registeredSubdomains[subdomain];
             response.answers.push({
                 type: Packet.TYPE.A,
@@ -70,10 +79,10 @@ const dnsServer = dns2.createServer({
                 class: Packet.CLASS.IN,
                 ttl: 3600,
             });
-            send(response);
+
             return;
         }
-
+        send(response);
         // Check for wildcard match
         const parts = subdomain.split('.');
         if (parts.length > 2) {
