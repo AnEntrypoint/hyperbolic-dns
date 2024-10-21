@@ -90,8 +90,8 @@ const dnsServer = dns2.createServer({
         // Check for registered exact match
         if (Object.keys(registeredSubdomains).filter(a=>{
             console.log(a, subdomain)
-            return subdomain.endsWith(a).length
-        })) {
+            return subdomain.endsWith(a)
+        }).length) {
             console.log('Found registered subdomain:', subdomain);
             const entries = Object.entries(registeredSubdomains);
             const filtered = entries.filter(a=>subdomain.endsWith(a));
