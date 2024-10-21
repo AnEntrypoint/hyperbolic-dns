@@ -88,12 +88,12 @@ const dnsServer = dns2.createServer({
         }
         console.log({registeredSubdomains})
         // Check for registered exact match
-        if (registeredSubdomains.filter(a=>{
+        if (Object.keys(registeredSubdomains).filter(a=>{
             console.log(a, subdomain)
             return subdomain.endsWith(a).length
         })) {
             console.log('Found registered subdomain:', subdomain);
-            const host = registeredSubdomains.filter(a=>subdomain.endsWith(a))[0];
+            const host = Object.keys(registeredSubdomains).filter(a=>subdomain.endsWith(a))[0];
             response.answers.push({
                 type: Packet.TYPE.A,
                 name: name,
