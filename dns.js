@@ -34,6 +34,14 @@ app.post('/register', (req, res) => {
     registeredSubdomains[name.toLowerCase()] = host;
     console.log(`Registered subdomain: ${name} with host: ${host}`);
 
+    // Registering a wildcard subdomain
+    const parts = name.split('.');
+    if (parts.length > 2) {
+        const wildcard = `*.${parts.slice(1).join('.')}`;
+        registeredSubdomains[wildcard] = host; // Ensure wildcard points to the same host
+        console.log(`Registered wildcard subdomain: ${wildcard} with host: ${host}`);
+    }
+
     return res.status(200).json({ message: `Successfully registered ${name}` });
 });
 
@@ -52,20 +60,36 @@ const dnsServer = dns2.createServer({
 
         const subdomain = question.name.toLowerCase();
 
-        // Check for registered subdomains
+        // Check for registered exact match
         if (registeredSubdomains[subdomain]) {
             const host = registeredSubdomains[subdomain];
-
-            // Respond with A record
             response.answers.push({
                 type: Packet.TYPE.A,
                 name: subdomain,
-                address: host, // Respond with the corresponding host
+                address: host,
                 class: Packet.CLASS.IN,
                 ttl: 3600,
             });
             send(response);
             return;
+        }
+
+        // Check for wildcard match
+        const parts = subdomain.split('.');
+        if (parts.length > 2) {
+            const wildcard = `*.${parts.slice(1).join('.')}`;
+            if (registeredSubdomains[wildcard]) {
+                const host = registeredSubdomains[wildcard];
+                response.answers.push({
+                    type: Packet.TYPE.A,
+                    name: subdomain,
+                    address: host,
+                    class: Packet.CLASS.IN,
+                    ttl: 3600,
+                });
+                send(response);
+                return;
+            }
         }
 
         // Respond with no answer for unregistered subdomains
@@ -78,11 +102,11 @@ dnsServer.on("close", () => {
     console.log("DNS server closed");
 });
 dnsServer.listen({
-    udp: 53,  // Listening on UDP port 53 for DNS queries
-    tcp: 53,  // Listening on TCP port 53 for DNS queries as well
+    udp: 53,
+    tcp: 53,
 });
 
-// Start the Express server
+// Start the webhook server
 app.listen(PORT, () => {
     console.log(`Webhook registration server running on http://localhost:${PORT}`);
 });
