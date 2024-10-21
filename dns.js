@@ -78,7 +78,7 @@ const dnsServer = dns2.createServer({
             });
         }
         // Check for registered exact match
-        const filtered = registeredSubdomains.filter(a=>subdomain.endsWith(a[0]));
+        const filtered = Object.entries(registeredSubdomains).filter(a=>subdomain.endsWith(a[0]));
         console.log({registeredSubdomains})
         if(filtered.length) {
             const host = filtered[0][1];
