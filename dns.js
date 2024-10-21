@@ -1,8 +1,36 @@
+const express = require('express');
 const dns2 = require("dns2");
 const { Packet } = require("dns2");
-require("dotenv").config();
+const bodyParser = require('body-parser');
+require('dotenv').config();
 
-const server = dns2.createServer({
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// In-memory store for registered subdomains
+const registeredSubdomains = {};
+
+// Middleware to parse JSON bodies
+app.use(bodyParser.json());
+
+// Endpoint to handle registration
+app.post('/register', (req, res) => {
+    const { name, host } = req.body;
+
+    // Validate input
+    if (!name || !host) {
+        return res.status(400).json({ error: 'Missing name or host in the request body.' });
+    }
+
+    // Save the registration in memory
+    registeredSubdomains[name.toLowerCase()] = host;
+    console.log(`Registered subdomain: ${name} with host: ${host}`);
+    
+    return res.status(200).json({ message: `Successfully registered ${name}` });
+});
+
+// Create DNS server
+const dnsServer = dns2.createServer({
     udp: true,
     tcp: true,
     doh: {
@@ -14,13 +42,17 @@ const server = dns2.createServer({
 
         console.log('Question:', { question });
 
-        if (question.type === Packet.TYPE.A) {
+        const subdomain = question.name.toLowerCase();
+
+        // Check for registered subdomains
+        if (registeredSubdomains[subdomain]) {
+            const host = registeredSubdomains[subdomain];
+
             // Respond with A record
-            const ip = '150.136.80.119'; // This can be dynamically set as needed
             response.answers.push({
                 type: Packet.TYPE.A,
-                name: question.name.toLowerCase(),
-                address: ip,
+                name: subdomain,
+                address: host, // Respond with the corresponding host
                 class: Packet.CLASS.IN,
                 ttl: 3600,
             });
@@ -28,43 +60,21 @@ const server = dns2.createServer({
             return;
         }
 
-        if (question.type === Packet.TYPE.MX) {
-            // Respond with MX record
-            response.answers.push({
-                type: Packet.TYPE.MX,
-                name: question.name.toLowerCase(),
-                exchange: 'mail.247420.xyz',
-                priority: 10,
-                class: Packet.CLASS.IN,
-                ttl: 3600,
-            });
-            send(response);
-            return;
-        }
-
-        if (question.type === Packet.TYPE.TXT) {
-            // Respond with TXT record
-            response.answers.push({
-                type: Packet.TYPE.TXT,
-                name: question.name.toLowerCase(),
-                data: 'google-site-verification=PguQv_YbBtFq8QCtyzH-z95Tqh9B_gIJevdriRe9GQ8',
-                class: Packet.CLASS.IN,
-                ttl: 3600,
-            });
-            send(response);
-            return;
-        }
-
-        // Default response for unsupported queries
-        send(response); // Simply returning the response with no answers if we don't know how to handle it
+        // Respond with no answer for unregistered subdomains
+        send(response); // No answer if the domain is not registered
     },
 });
 
-server.on("close", () => {
-    console.log("Server closed");
+// Start the DNS server
+dnsServer.on("close", () => {
+    console.log("DNS server closed");
 });
-
-server.listen({
+dnsServer.listen({
     udp: 53,  // Listening on UDP port 53 for DNS queries
     tcp: 53,  // Listening on TCP port 53 for DNS queries as well
+});
+
+// Start the Express server
+app.listen(PORT, () => {
+    console.log(`Webhook registration server running on http://localhost:${PORT}`);
 });
