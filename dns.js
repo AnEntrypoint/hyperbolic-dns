@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const dns2 = require("dns2");
 const { Packet } = require("dns2");
@@ -15,6 +16,13 @@ app.use(bodyParser.json());
 
 // Endpoint to handle registration
 app.post('/register', (req, res) => {
+    const token = req.headers['authorization'];
+
+    // Verify Bearer token
+    if (!token || token !== `Bearer ${process.env.BEARER_TOKEN}`) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
     const { name, host } = req.body;
 
     // Validate input
@@ -25,7 +33,7 @@ app.post('/register', (req, res) => {
     // Save the registration in memory
     registeredSubdomains[name.toLowerCase()] = host;
     console.log(`Registered subdomain: ${name} with host: ${host}`);
-    
+
     return res.status(200).json({ message: `Successfully registered ${name}` });
 });
 
