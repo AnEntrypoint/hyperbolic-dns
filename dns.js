@@ -50,9 +50,22 @@ const dnsServer = dns2.createServer({
 
         console.log('Question:', { question });
 
-        const subdomain = question.name.toLowerCase();
-        console.log({subdomain})
-        if(subdomain.endsWith('dns')) {
+        const name = question.name.toLowerCase();
+        console.log({ subdomain })
+        // Registering a wildcard subdomain
+        const parts = name.split('.');
+        if (parts.length = 2) {
+            response.answers.push({
+                type: Packet.TYPE.A,
+                name: subdomain,
+                address: process.env.HOSTIP,
+                class: Packet.CLASS.IN,
+                ttl: 3600,
+            });
+        }
+        parts.pop()
+        parts.pop();
+        if (subdomain.endsWith('dns')) {
             response.answers.push({
                 type: Packet.TYPE.A,
                 name: subdomain,
