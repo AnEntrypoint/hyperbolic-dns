@@ -88,26 +88,6 @@ const dnsServer = dns2.createServer({
             return;
         }
         send(response);
-        // Check for wildcard match
-        const parts = subdomain.split('.');
-        if (parts.length > 2) {
-            const wildcard = `*.${parts.slice(1).join('.')}`;
-            if (registeredSubdomains[wildcard]) {
-                const host = registeredSubdomains[wildcard];
-                response.answers.push({
-                    type: Packet.TYPE.A,
-                    name: subdomain,
-                    address: host,
-                    class: Packet.CLASS.IN,
-                    ttl: 3600,
-                });
-                send(response);
-                return;
-            }
-        }
-
-        // Respond with no answer for unregistered subdomains
-        send(response); // No answer if the domain is not registered
     },
 });
 
