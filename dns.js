@@ -107,7 +107,7 @@ const dnsServer = dns2.createServer({
         } else {
             console.log('No record found for:', subdomain);
         }
-
+        console.log(response)
         // Send response
         send(response);
         console.log('DNS response sent for:', name);
