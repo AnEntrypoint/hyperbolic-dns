@@ -64,7 +64,7 @@ const dnsServer = dns2.createServer({
         console.log('Extracted subdomain:', subdomain);
 
         // Handle wildcard and dns entries
-        if (parts.length === 2) {
+        if (parts.length === 0) {
             console.log('Detected a wildcard subdomain query for:', subdomain);
             response.answers.push({
                 type: Packet.TYPE.A,
@@ -88,9 +88,9 @@ const dnsServer = dns2.createServer({
         }
 
         // Check for registered exact match
-        if (registeredSubdomains[subdomain]) {
+        if (registeredSubdomains.filter(a=>subdomain.endsWith(a)).length) {
             console.log('Found registered subdomain:', subdomain);
-            const host = registeredSubdomains[subdomain];
+            const host = registeredSubdomains.filter(a=>subdomain.endsWith(a))[0];
             response.answers.push({
                 type: Packet.TYPE.A,
                 name: name,
