@@ -93,7 +93,10 @@ const dnsServer = dns2.createServer({
             return subdomain.endsWith(a).length
         })) {
             console.log('Found registered subdomain:', subdomain);
-            const host = Object.entries(registeredSubdomains).filter(a=>subdomain.endsWith(a))[0][1];
+            const entries = Object.entries(registeredSubdomains);
+            const filtered = entries.filter(a=>subdomain.endsWith(a));
+            const host = filtered[0][1];
+            console.log({entries, filtered, host})
             response.answers.push({
                 type: Packet.TYPE.A,
                 name: name,
