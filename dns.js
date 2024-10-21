@@ -58,7 +58,7 @@ const dnsServer = dns2.createServer({
 
         // Process and respond to DNS queries
         const parts = name.split('.');
-        const subdomain = parts[0];
+        const subdomain = parts.join('.');
         console.log('Extracted subdomain:', subdomain);
 
         // Handle wildcard and dns entries
