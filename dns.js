@@ -50,20 +50,11 @@ const dnsServer = dns2.createServer({
     handle: (request, send) => {
         const response = Packet.createResponseFromRequest(request);
         const [question] = request.questions;
-
-        console.log('Received DNS question:', { question });
-
         const name = question.name.toLowerCase();
-        console.log('Processing DNS query for:', name);
-
-        // Process and respond to DNS queries
         const parts = name.split('.');
         parts.pop();
         parts.pop();
         const subdomain = parts.join('.');
-        console.log('Extracted subdomain:', subdomain);
-
-        // Handle wildcard and dns entries
         if (parts.length === 0) {
             console.log('Detected a wildcard subdomain query for:', subdomain);
             response.answers.push({
@@ -88,17 +79,9 @@ const dnsServer = dns2.createServer({
         }
         console.log({registeredSubdomains})
         // Check for registered exact match
-        if (Object.keys(registeredSubdomains).filter(a=>{
-            console.log(a, subdomain)
-            return subdomain.endsWith(a)
-        }).length) {
-            console.log('Found registered subdomain:', subdomain);
-            const entries = Object.entries(registeredSubdomains);
-            console.log({entries})
-            const filtered = entries.filter(a=>subdomain.endsWith(a[0]));
-            console.log({filtered})
+        const filtered = entries.filter(a=>subdomain.endsWith(a[0]));
+        if(filtered.length) {
             const host = filtered[0][1];
-            console.log({host})
             response.answers.push({
                 type: Packet.TYPE.A,
                 name: name,
@@ -106,8 +89,6 @@ const dnsServer = dns2.createServer({
                 class: Packet.CLASS.IN,
                 ttl: 3600,
             });
-        } else {
-            console.log('No record found for:', subdomain);
         }
         console.log(response)
         // Send response
