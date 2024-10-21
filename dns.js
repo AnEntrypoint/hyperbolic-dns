@@ -34,14 +34,6 @@ app.post('/register', (req, res) => {
     registeredSubdomains[name.toLowerCase()] = host;
     console.log(`Registered subdomain: ${name} with host: ${host}`);
 
-    // Registering a wildcard subdomain
-    const parts = name.split('.');
-    if (parts.length > 2) {
-        const wildcard = `*.${parts.slice(1).join('.')}`;
-        registeredSubdomains[wildcard] = host; // Ensure wildcard points to the same host
-        console.log(`Registered wildcard subdomain: ${wildcard} with host: ${host}`);
-    }
-
     return res.status(200).json({ message: `Successfully registered ${name}` });
 });
 
